@@ -50,8 +50,8 @@ public class RunBackendVertx {
             vertxServer.ssl(vertxConfiguration.getSslKeystorePath(), vertxConfiguration.getSslPassword());
         }
         vertxServer.start(new BackendVertx(vertxServer.createJwtAuth(), objectMapper,
-                new UserRestClient("https://localhost:8585", "login", "password"),
-                new OrganizationRestClient("https://localhost:8686", "login", "password")), vertxConfiguration.getPort());
+                new UserRestClient("http://localhost:8585", "login", "password"),
+                new OrganizationRestClient("http://localhost:8686", "login", "password")), vertxConfiguration.getPort());
 
     }
 

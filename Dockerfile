@@ -7,4 +7,5 @@ COPY ssl/ ssl/
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-DLogback.configurationFile=config/logback.xml", "-jar", "backend-1.0-SNAPSHOT.jar", "--auth-htpasswd-path", "config/.htpasswd", "--config", "config/application.conf", "--ssl-keystore", "ssl/localhost.keystore", "--ssl-password", "password", "-cp", "libs/*" ]
+# "--ssl-keystore", "ssl/localhost.keystore", "--ssl-password", "password"
+ENTRYPOINT ["java", "-DLogback.configurationFile=config/logback.xml", "-jar", "backend-1.0-SNAPSHOT.jar", "--auth-htpasswd-path", "config/.htpasswd", "--config", "config/application.conf", "-cp", "libs/*" ]

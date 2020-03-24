@@ -16,6 +16,7 @@ import io.vertx.ext.jwt.JWTOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.CorsHandler;
 
 import java.util.UUID;
 
@@ -37,11 +38,20 @@ public class BackendVertx implements VertxMicroService {
     }
 
     public void route(Router router) {
+        router.route().handler(CorsHandler.create(".*.")
+                .allowedMethod(io.vertx.core.http.HttpMethod.GET)
+                .allowedMethod(io.vertx.core.http.HttpMethod.POST)
+                .allowedMethod(io.vertx.core.http.HttpMethod.OPTIONS)
+                .allowCredentials(true)
+                .allowedHeader("Access-Control-Allow-Method")
+                .allowedHeader("Access-Control-Allow-Origin")
+                .allowedHeader("Access-Control-Allow-Credentials")
+                .allowedHeader("Content-Type"));
         router.route().handler(BodyHandler.create());
         router.post("/backend/api/v1/secured/*")
                 .produces(APPLICATION_JSON)
                 .handler(authenticationFilter());
-        router.get("/backend/api/v1/signin")
+        router.post("/backend/api/v1/signin")
                 .produces(APPLICATION_JSON)
                 .handler(signin());
         router.put("/backend/api/v1/secured/signout")
