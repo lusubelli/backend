@@ -48,13 +48,13 @@ public class BackendVertx implements VertxMicroService {
                 .allowedHeader("Access-Control-Allow-Credentials")
                 .allowedHeader("Content-Type"));
         router.route().handler(BodyHandler.create());
-        router.post("/backend/api/v1/secured/*")
+        router.route("/backend/api/v1/secured/*")
                 .produces(APPLICATION_JSON)
                 .handler(authenticationFilter());
         router.post("/backend/api/v1/signin")
                 .produces(APPLICATION_JSON)
                 .handler(signin());
-        router.put("/backend/api/v1/secured/signout")
+        router.get("/backend/api/v1/secured/signout")
                 .produces(APPLICATION_JSON)
                 .handler(signout());
     }
@@ -120,7 +120,7 @@ public class BackendVertx implements VertxMicroService {
         Cookie cookie = Cookie.cookie("SESSIONID", "");
         String path = "/";
         cookie.setPath(path);
-        cookie.setSecure(true);
+        //cookie.setSecure(true);
         cookie.setHttpOnly(true);
         cookie.setMaxAge(0);
         return cookie;
