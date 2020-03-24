@@ -22,7 +22,7 @@ public class OkHttpRestClient {
         OkHttpClient client = null;
 
         try {
-
+/*
         SSLContext sslContext;
         SSLSocketFactory sslSocketFactory;
         TrustManager[] trustManagers;
@@ -44,9 +44,9 @@ public class OkHttpRestClient {
         sslContext.init(null, new TrustManager[]{trustManager}, null);
 
         sslSocketFactory = sslContext.getSocketFactory();
-
+*/
         client = new OkHttpClient.Builder()
-                .sslSocketFactory(sslSocketFactory, trustManager)
+                //.sslSocketFactory(sslSocketFactory, trustManager)
                 .build();
         } catch (Exception e) {
             e.printStackTrace();
