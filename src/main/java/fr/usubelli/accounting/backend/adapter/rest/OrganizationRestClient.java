@@ -2,33 +2,28 @@ package fr.usubelli.accounting.backend.adapter.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import fr.usubelli.accounting.backend.RestConfiguration;
 import fr.usubelli.accounting.backend.dto.Organization;
 import fr.usubelli.accounting.backend.exception.OrganisationAlreadyExistsException;
 import fr.usubelli.accounting.backend.port.OrganizationGateway;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import java.io.IOException;
 
 public class OrganizationRestClient implements OrganizationGateway {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationRestClient.class);
     private static final String ORGANIZATION_CONTEXT_PATH = "/organization";
 
-    private final String url;
-    private final String login;
-    private final String password;
     private final ObjectMapper objectMapper;
+    private final RestConfiguration restConfiguration;
 
-    public OrganizationRestClient(
-            final String url,
-            final String login,
-            final String password) {
-        this.url = url;
-        this.login = login;
-        this.password = password;
-        this.objectMapper = new ObjectMapper();
-        this.objectMapper.registerModule(new JavaTimeModule());
-        this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    public OrganizationRestClient(RestConfiguration restConfiguration, ObjectMapper objectMapper) {
+        this.restConfiguration = restConfiguration;
+        this.objectMapper = objectMapper;
+        LOGGER.info(String.format("\tURL : %s", restConfiguration.url()));
+        LOGGER.info(String.format("\tHTPASSWD : %s", restConfiguration.hasBasicAuth()));
     }
 
     @Override
@@ -36,8 +31,8 @@ public class OrganizationRestClient implements OrganizationGateway {
         RestResponse response;
         try {
             response = OkHttpRestClient
-                    .url(url + ORGANIZATION_CONTEXT_PATH)
-                    .basicAuth(this.login, this.password)
+                    .url(this.restConfiguration.url() + ORGANIZATION_CONTEXT_PATH)
+                    .basicAuth(this.restConfiguration.basic())
                     .post(organizationToJson(organization))
                     .send();
         } catch (IOException e) {
@@ -61,8 +56,8 @@ public class OrganizationRestClient implements OrganizationGateway {
         RestResponse response;
         try {
             response = OkHttpRestClient
-                    .url(url + ORGANIZATION_CONTEXT_PATH + "/" + siren)
-                    .basicAuth(this.login, this.password)
+                    .url(this.restConfiguration.url() + ORGANIZATION_CONTEXT_PATH + "/" + siren)
+                    .basicAuth(this.restConfiguration.basic())
                     .get()
                     .send();
         } catch (IOException e) {
@@ -82,8 +77,8 @@ public class OrganizationRestClient implements OrganizationGateway {
         RestResponse response;
         try {
             response = OkHttpRestClient
-                    .url(url + ORGANIZATION_CONTEXT_PATH)
-                    .basicAuth(this.login, this.password)
+                    .url(this.restConfiguration.url() + ORGANIZATION_CONTEXT_PATH)
+                    .basicAuth(this.restConfiguration.basic())
                     .put(organizationToJson(organization))
                     .send();
         } catch (IOException e) {

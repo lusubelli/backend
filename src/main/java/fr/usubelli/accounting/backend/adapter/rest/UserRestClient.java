@@ -2,33 +2,29 @@ package fr.usubelli.accounting.backend.adapter.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import fr.usubelli.accounting.backend.RestConfiguration;
 import fr.usubelli.accounting.backend.dto.User;
 import fr.usubelli.accounting.backend.exception.UserAlreadyExistsException;
 import fr.usubelli.accounting.backend.port.UserGateway;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import java.io.IOException;
 
 public class UserRestClient implements UserGateway {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserRestClient.class);
     private static final String USER_CONTEXT_PATH = "/user";
 
-    private final String url;
-    private final String login;
-    private final String password;
+    private final RestConfiguration restConfiguration;
     private final ObjectMapper objectMapper;
 
-    public UserRestClient(
-            final String url,
-            final String login,
-            final String password) {
-        this.url = url;
-        this.login = login;
-        this.password = password;
-        this.objectMapper = new ObjectMapper();
-        this.objectMapper.registerModule(new JavaTimeModule());
-        this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    public UserRestClient(RestConfiguration restConfiguration, ObjectMapper objectMapper) {
+        this.restConfiguration = restConfiguration;
+        this.objectMapper = objectMapper;
+
+        LOGGER.info(String.format("\tURL : %s", restConfiguration.url()));
+        LOGGER.info(String.format("\tHTPASSWD : %s", restConfiguration.hasBasicAuth()));
     }
 
     public User createUser(User user) throws UserAlreadyExistsException {
@@ -36,8 +32,8 @@ public class UserRestClient implements UserGateway {
         RestResponse response;
         try {
             response = OkHttpRestClient
-                    .url(url + USER_CONTEXT_PATH)
-                    .basicAuth(this.login, this.password)
+                    .url(this.restConfiguration.url() + USER_CONTEXT_PATH)
+                    .basicAuth(this.restConfiguration.basic())
                     .post(userToJson(user))
                     .send();
         } catch (IOException e) {
@@ -61,8 +57,8 @@ public class UserRestClient implements UserGateway {
         RestResponse response;
         try {
             response = OkHttpRestClient
-                    .url(url + USER_CONTEXT_PATH + "/" + email)
-                    .basicAuth(this.login, this.password)
+                    .url(this.restConfiguration.url() + USER_CONTEXT_PATH + "/" + email)
+                    .basicAuth(this.restConfiguration.basic())
                     .get()
                     .send();
         } catch (IOException e) {
@@ -82,8 +78,8 @@ public class UserRestClient implements UserGateway {
         RestResponse response;
         try {
             response = OkHttpRestClient
-                    .url(url + USER_CONTEXT_PATH)
-                    .basicAuth(this.login, this.password)
+                    .url(this.restConfiguration.url() + USER_CONTEXT_PATH)
+                    .basicAuth(this.restConfiguration.basic())
                     .put(userToJson(user))
                     .send();
         } catch (IOException e) {

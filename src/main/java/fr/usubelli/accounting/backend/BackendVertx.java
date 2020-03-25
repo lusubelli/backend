@@ -24,20 +24,18 @@ public class BackendVertx implements VertxMicroService {
 
     private static final String APPLICATION_JSON = "application/json";
 
-    private final JWTAuth authProvider;
     private final ObjectMapper objectMapper;
     private final UserGateway userGateway;
     private final OrganizationGateway organisationGateway;
 
-    public BackendVertx(JWTAuth authProvider, ObjectMapper objectMapper, UserGateway userGateway,
+    public BackendVertx(ObjectMapper objectMapper, UserGateway userGateway,
             OrganizationGateway organisationGateway) {
-        this.authProvider = authProvider;
         this.objectMapper = objectMapper;
         this.userGateway = userGateway;
         this.organisationGateway = organisationGateway;
     }
 
-    public void route(Router router) {
+    public void route(Router router, JWTAuth authProvider) {
         router.route().handler(CorsHandler.create(".*.")
                 .allowedMethod(io.vertx.core.http.HttpMethod.GET)
                 .allowedMethod(io.vertx.core.http.HttpMethod.POST)
@@ -50,16 +48,16 @@ public class BackendVertx implements VertxMicroService {
         router.route().handler(BodyHandler.create());
         router.route("/backend/api/v1/secured/*")
                 .produces(APPLICATION_JSON)
-                .handler(authenticationFilter());
+                .handler(authenticationFilter(authProvider));
         router.post("/backend/api/v1/signin")
                 .produces(APPLICATION_JSON)
-                .handler(signin());
+                .handler(signin(authProvider));
         router.get("/backend/api/v1/secured/signout")
                 .produces(APPLICATION_JSON)
                 .handler(signout());
     }
 
-    private Handler<RoutingContext> signin() {
+    private Handler<RoutingContext> signin(JWTAuth authProvider) {
         return rc -> {
             try {
                 final SigninRequest signinRequest = objectMapper.readValue(rc.getBodyAsString(), SigninRequest.class);
@@ -67,7 +65,7 @@ public class BackendVertx implements VertxMicroService {
                 final User user = new Signin(userGateway).signin(signinRequest);
                 if (user != null) {
                     final String xsrfToken = UUID.randomUUID().toString();
-                    String token = createJsonWebToken(user, xsrfToken);
+                    String token = createJsonWebToken(authProvider, user, xsrfToken);
                     // now for any request to protected resources you should pass this string in the HTTP header Authorization as:
                     // Authorization: Bearer <token>
                     rc.addCookie(createCookie(token));
@@ -82,7 +80,7 @@ public class BackendVertx implements VertxMicroService {
         };
     }
 
-    private Handler<RoutingContext> authenticationFilter() {
+    private Handler<RoutingContext> authenticationFilter(JWTAuth authProvider) {
         return rc -> {
             final String jwt = rc.getCookie("SESSIONID").getValue();
             authProvider.authenticate(new JsonObject().put("jwt", jwt), res -> {
@@ -126,7 +124,7 @@ public class BackendVertx implements VertxMicroService {
         return cookie;
     }
 
-    private String createJsonWebToken(User user, String xsrfToken) {
+    private String createJsonWebToken(JWTAuth authProvider, User user, String xsrfToken) {
         final JsonObject claims = new JsonObject()
                 .put("sub", user.getEmail())
                 .put("xsrfToken", xsrfToken)

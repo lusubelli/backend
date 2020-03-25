@@ -1,12 +1,9 @@
 package fr.usubelli.accounting.backend.adapter.rest;
 
+import fr.usubelli.accounting.backend.RestConfiguration;
 import okhttp3.*;
 
-import javax.net.ssl.*;
-import java.io.File;
 import java.io.IOException;
-import java.security.KeyStore;
-import java.util.Arrays;
 
 public class OkHttpRestClient {
 
@@ -56,6 +53,14 @@ public class OkHttpRestClient {
 
     public static OkHttpRestClient url(String url) {
         return new OkHttpRestClient(new Request.Builder().url(url));
+    }
+
+    public OkHttpRestClient basicAuth(RestConfiguration.BasicAuth basic) {
+        if (basic != null) {
+            this.builder.addHeader("Authorization",
+                    Credentials.basic(basic.username(), basic.password()));
+        }
+        return this;
     }
 
     public OkHttpRestClient basicAuth(String username, String password) {

@@ -3,57 +3,58 @@ package fr.usubelli.accounting.backend;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 import fr.usubelli.accounting.backend.adapter.rest.OrganizationRestClient;
 import fr.usubelli.accounting.backend.adapter.rest.UserRestClient;
-import fr.usubelli.accounting.common.VertxCommand;
-import fr.usubelli.accounting.common.VertxConfiguration;
-import fr.usubelli.accounting.common.VertxServer;
+import fr.usubelli.accounting.common.*;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.cli.ParseException;
 
-import java.io.File;
-
 public class RunBackendVertx {
 
+    private static final String DEFAULT_APPLICATION_CONF = "src/main/resources/application.conf";
     private static final Logger LOGGER = LoggerFactory.getLogger(RunBackendVertx.class);
 
     public static void main(String[] args) {
 
-        VertxConfiguration vertxConfiguration;
+        Configuration configuration;
         try {
-            vertxConfiguration = new VertxCommand().parse(args);
+            configuration = MicroServiceCommand.parse(args, DEFAULT_APPLICATION_CONF);
         } catch (ParseException e) {
             System.exit(1);
             return;
         }
 
-        LOGGER.info(String.format("Loading config from %s", vertxConfiguration.getConfigPath()));
-        LOGGER.info(String.format("HTTPS : %s", vertxConfiguration.getSslKeystorePath() != null));
-        LOGGER.info(String.format("HTPASSWD : %s", vertxConfiguration.getAuthHtpasswdPath() != null));
-
-        Config configuration = ConfigFactory.empty();
-        final File configFile = new File(vertxConfiguration.getConfigPath());
-        if (configFile.exists()) {
-            configuration = ConfigFactory.parseFile(configFile).resolve();
+        if (configuration == null) {
+            System.exit(1);
+            return;
         }
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        ObjectMapper serverObjectMapper = new ObjectMapper();
+        serverObjectMapper.registerModule(new JavaTimeModule());
+        serverObjectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-        final VertxServer vertxServer = VertxServer.create();
-        vertxServer.htpasswd(vertxConfiguration.getAuthHtpasswdRealm(), vertxConfiguration.getAuthHtpasswdPath());
-        if (vertxConfiguration.getSslKeystorePath() != null) {
-            vertxServer.ssl(vertxConfiguration.getSslKeystorePath(), vertxConfiguration.getSslPassword());
-        }
-        vertxServer.start(new BackendVertx(vertxServer.createJwtAuth(), objectMapper,
-                new UserRestClient("http://localhost:8585", "login", "password"),
-                new OrganizationRestClient("http://localhost:8686", "login", "password")), vertxConfiguration.getPort());
+        ObjectMapper clientObjectMapper = new ObjectMapper();
+        clientObjectMapper.registerModule(new JavaTimeModule());
+        clientObjectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        final UserRestClient userGateway = new UserRestClient(
+                new RestConfiguration(configuration.getString("user-api.url", "http://localhost:9000"))
+                        .basic(configuration.getConfiguration("user-api.basic", null)), clientObjectMapper);
+        final OrganizationRestClient organisationGateway = new OrganizationRestClient(
+                new RestConfiguration(configuration.getString("organization-api.url", "http://localhost:9001"))
+                        .basic(configuration.getConfiguration("organization-api.basic", null)), clientObjectMapper);
+
+        final VertxMicroService microService = new BackendVertx(serverObjectMapper,
+                userGateway, organisationGateway);
+
+        VertxServer.create(
+                new MicroServiceConfiguration(configuration.getInt("http.port", 8080))
+                        .basic(configuration.getConfiguration("http.basic", null))
+                        .ssl(configuration.getConfiguration("http.ssl", null))
+                        .jwt(configuration.getConfiguration("http.jwt", null)))
+                .start(microService);
 
     }
-
 
 }
