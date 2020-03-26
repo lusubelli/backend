@@ -36,7 +36,7 @@ public class BackendVertx implements VertxMicroService {
     }
 
     public void route(Router router, JWTAuth authProvider) {
-        router.route().handler(CorsHandler.create(".*.")
+        /*router.route().handler(CorsHandler.create(".*.")
                 .allowedMethod(io.vertx.core.http.HttpMethod.GET)
                 .allowedMethod(io.vertx.core.http.HttpMethod.POST)
                 .allowedMethod(io.vertx.core.http.HttpMethod.OPTIONS)
@@ -44,7 +44,7 @@ public class BackendVertx implements VertxMicroService {
                 .allowedHeader("Access-Control-Allow-Method")
                 .allowedHeader("Access-Control-Allow-Origin")
                 .allowedHeader("Access-Control-Allow-Credentials")
-                .allowedHeader("Content-Type"));
+                .allowedHeader("Content-Type"));*/
         router.route().handler(BodyHandler.create());
         router.route("/backend/api/v1/secured/*")
                 .produces(APPLICATION_JSON)
