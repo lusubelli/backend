@@ -36,7 +36,7 @@ public class MicroServiceCommand {
         String configPath = cmd.getOptionValue("config", defaultConfigurationPath);
 
         if (!new File(configPath).exists()) {
-            return null;
+            return new Configuration(ConfigFactory.empty());
         }
 
         LOGGER.info(String.format("Loading config from %s", configPath));
