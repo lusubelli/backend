@@ -2,7 +2,7 @@ FROM openjdk:8-jdk-alpine
 
 COPY backend-1.0-SNAPSHOT.jar backend-1.0-SNAPSHOT.jar
 COPY libs/ libs/
-COPY config/ config/
+# COPY config/ config/
 # COPY ssl/ ssl/
 
 EXPOSE 8080
