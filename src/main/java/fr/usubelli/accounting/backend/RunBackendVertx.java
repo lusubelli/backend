@@ -3,12 +3,14 @@ package fr.usubelli.accounting.backend;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.typesafe.config.ConfigFactory;
 import fr.usubelli.accounting.backend.adapter.rest.OrganizationRestClient;
 import fr.usubelli.accounting.backend.adapter.rest.UserRestClient;
 import fr.usubelli.accounting.common.*;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.apache.commons.cli.ParseException;
+
+import java.io.File;
 
 public class RunBackendVertx {
 
@@ -17,18 +19,7 @@ public class RunBackendVertx {
 
     public static void main(String[] args) {
 
-        Configuration configuration;
-        try {
-            configuration = MicroServiceCommand.parse(args, DEFAULT_APPLICATION_CONF);
-        } catch (ParseException e) {
-            System.exit(1);
-            return;
-        }
-
-        if (configuration == null) {
-            System.exit(1);
-            return;
-        }
+        Configuration configuration = new Configuration(ConfigFactory.parseFile(new File("application.conf")));
 
         ObjectMapper serverObjectMapper = new ObjectMapper();
         serverObjectMapper.registerModule(new JavaTimeModule());

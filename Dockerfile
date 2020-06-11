@@ -2,6 +2,7 @@ FROM openjdk:8-jdk-alpine
 
 COPY target/backend-1.0-SNAPSHOT.jar backend-1.0-SNAPSHOT.jar
 COPY target/libs/ libs/
+COPY application.conf application.conf
 
 EXPOSE 8080
 
