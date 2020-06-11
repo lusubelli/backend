@@ -13,11 +13,7 @@ public class Signin {
     }
 
     public User signin(SigninRequest signinRequest) {
-        final User user = userGateway.findUser(signinRequest.getEmail());
-        if (user != null && isSamePassword(user.getPassword(), signinRequest.getPassword())) {
-           return new User(signinRequest.getEmail(), null, null, User.UserState.CREATED);
-        }
-        return null;
+        return new User(signinRequest.getEmail(), signinRequest.getPassword(), null, null);
     }
 
     private boolean isSamePassword(String storedPassword, String inputPassword) {
