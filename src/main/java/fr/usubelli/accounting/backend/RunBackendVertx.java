@@ -46,6 +46,8 @@ public class RunBackendVertx {
                         .jwt(configuration.getConfiguration("http.jwt", null)))
                 .start(microService);
 
+        LOGGER.info("HELLO MY FRIEND");
+
     }
 
 }
